@@ -84,6 +84,19 @@ class AppRoutes {
   static const String settings = '/settings';
 }
 
+/// Couleurs principales réutilisables dans l'application.
+class AppColors {
+  AppColors._();
+
+  static const orange = Color(0xFFFF8C00);
+  static const darkBlue = Color(0xFF0A3D5C);
+  static const white = Color(0xFFFFFFFF);
+  static const orangeGradientStart = Color(0xFFFF8C00);
+  static const orangeGradientEnd = Color(0xFFFF9F29);
+  static const blueGradientStart = Color(0xFF0A3D5C);
+  static const blueGradientEnd = Color(0xFF164863);
+}
+
 /// Chemins vers les différents assets (animations, images, sons).
 class AssetPaths {
   AssetPaths._();
@@ -93,6 +106,12 @@ class AssetPaths {
 
   /// Logo principal de l'application.
   static const String logo = 'assets/images/logo.png';
+
+  /// Image de fond optionnelle pour l'écran de splash.
+  static const String splashBg = 'assets/images/splash_bg.png';
+
+  /// Icône d'engrenage pour représenter les paramètres (optionnelle).
+  static const String gearIcon = 'assets/images/gear.png';
 
   /// Son de tap pour les interactions simples.
   static const String tapSound = 'assets/sounds/tap.mp3';

@@ -1,19 +1,56 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../utils/constants.dart';
 import '../controller/game_controller.dart';
-import 'player_card.dart';
 import 'winner_overlay.dart';
 
-/// Main game screen.
+/// Main game screen with split layout for both players.
 ///
-/// This screen wires the [GameController] with the UI:
-/// - displays two [PlayerCard] widgets (one for each player)
-/// - exposes global actions like undo and reset
-/// - shows a winner overlay when the game is won.
+/// - Top half: Player 1 (orange gradient), rotated 180° so both
+///   players see their score upright from their side of the table.
+/// - Bottom half: Player 2 (blue gradient).
+/// - Center: floating reset button avec confirmation.
 class GameScreen extends StatelessWidget {
   const GameScreen({super.key});
+
+  Future<void> _showResetDialog(BuildContext context) async {
+    final controller = context.read<GameController>();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Reset Game?'),
+          content: const Text(
+            'This will reset both scores to 0',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.orange,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Reset'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      await controller.reset();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,80 +59,199 @@ class GameScreen extends StatelessWidget {
       child: Consumer<GameController>(
         builder: (context, controller, _) {
           final state = controller.gameState;
-          final theme = Theme.of(context);
 
           return Scaffold(
-            appBar: AppBar(
-              title: Text(AppStrings.gameTitle),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.refresh),
-                  tooltip: AppStrings.reset,
-                  onPressed: controller.reset,
-                ),
-              ],
-            ),
             body: Stack(
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      // Display the target score at the top.
-                      Text(
-                        'First to ${state.maxScore} points wins',
-                        style: theme.textTheme.bodyLarge,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
+                Column(
+                  children: [
+                    // Top half - Player 1 (orange, rotated 180°).
+                    Expanded(
+                      child: Transform.rotate(
+                        angle: math.pi,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: controller.incrementPlayer1Score,
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  AppColors.orangeGradientStart,
+                                  AppColors.orangeGradientEnd,
+                                ],
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                              ),
+                            ),
+                            child: SafeArea(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  const Text(
+                                    'Tap To Increase Score',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                  ),
 
-                      // Player 1 card.
-                      Expanded(
-                        child: PlayerCard(
-                          player: state.player1,
-                          onIncrement: controller.incrementPlayer1Score,
-                          onDecrement: controller.decrementPlayer1Score,
-                          onEditScore: controller.editPlayer1Score,
-                          onEditName: (name) =>
-                              controller.editPlayerName(true, name),
-                          cardColor:
-                              theme.colorScheme.surface.withOpacity(0.95),
-                        ),
-                      ),
+                                  // Bouton -1
+                                  GestureDetector(
+                                    onTap: () {
+                                      // Empêche de propager le tap à la zone globale.
+                                      controller.decrementPlayer1Score();
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 8,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.15),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: const Text(
+                                        '-1',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
 
-                      // Player 2 card.
-                      Expanded(
-                        child: PlayerCard(
-                          player: state.player2,
-                          onIncrement: controller.incrementPlayer2Score,
-                          onDecrement: controller.decrementPlayer2Score,
-                          onEditScore: controller.editPlayer2Score,
-                          onEditName: (name) =>
-                              controller.editPlayerName(false, name),
-                          cardColor:
-                              theme.colorScheme.surface.withOpacity(0.95),
-                        ),
-                      ),
+                                  // Score énorme.
+                                  Text(
+                                    '${state.player1.score}',
+                                    style: const TextStyle(
+                                      fontSize: 120,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
 
-                      const SizedBox(height: 8),
-
-                      // Global actions row: undo + reset.
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          ElevatedButton.icon(
-                            onPressed: controller.undo,
-                            icon: const Icon(Icons.undo),
-                            label: Text(AppStrings.undo),
+                                  // Nom du joueur.
+                                  Text(
+                                    state.player1.name,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                          ElevatedButton.icon(
-                            onPressed: controller.reset,
-                            icon: const Icon(Icons.refresh),
-                            label: Text(AppStrings.reset),
+                        ),
+                      ),
+                    ),
+
+                    // Bottom half - Player 2 (blue gradient).
+                    Expanded(
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: controller.incrementPlayer2Score,
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppColors.blueGradientStart,
+                                AppColors.blueGradientEnd,
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                          ),
+                          child: SafeArea(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                // Nom du joueur 2.
+                                Text(
+                                  state.player2.name,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+
+                                // Score énorme.
+                                Text(
+                                  '${state.player2.score}',
+                                  style: const TextStyle(
+                                    fontSize: 120,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+
+                                // Bouton -1 pour le joueur 2.
+                                GestureDetector(
+                                  onTap: () {
+                                    controller.decrementPlayer2Score();
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: const Text(
+                                      '-1',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+
+                                const Text(
+                                  'Tap To Increase Score',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                // Bouton de reset central.
+                Center(
+                  child: GestureDetector(
+                    onTap: () => _showResetDialog(context),
+                    child: Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.15),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
-                    ],
+                      child: const Icon(
+                        Icons.refresh,
+                        color: AppColors.darkBlue,
+                      ),
+                    ),
                   ),
                 ),
 

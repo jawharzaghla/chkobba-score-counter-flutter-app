@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../models/game_state.dart';
+import '../../../screens/game_screen/ui/game_screen.dart';
+import '../../../screens/settings_screen/ui/settings_screen.dart';
 import '../../../services/audio_service.dart';
 import '../../../services/haptic_service.dart';
 import '../../../services/storage_service.dart';
@@ -37,12 +39,26 @@ class HomeController {
 
       if (!context.mounted) return;
 
-      // 4. Navigation vers l'écran de jeu.
-      // Le GameState peut être passé en argument si le GameScreen
-      // est conçu pour le recevoir via ModalRoute.of(context)?.settings.arguments.
-      Navigator.of(context).pushNamed(
-        AppRoutes.game,
-        arguments: state,
+      // 4. Navigation vers l'écran de jeu avec une transition de slide.
+      Navigator.of(context).push(
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const GameScreen(),
+          transitionsBuilder:
+              (context, animation, secondaryAnimation, child) {
+            const begin = Offset(1.0, 0.0);
+            const end = Offset.zero;
+            const curve = Curves.easeInOut;
+
+            final tween = Tween(begin: begin, end: end)
+                .chain(CurveTween(curve: curve));
+
+            return SlideTransition(
+              position: animation.drive(tween),
+              child: child,
+            );
+          },
+        ),
       );
     } catch (e, stack) {
       print('[HomeController] Erreur lors de navigateToGame: $e');
@@ -71,7 +87,26 @@ class HomeController {
 
       if (!context.mounted) return;
 
-      Navigator.of(context).pushNamed(AppRoutes.settings);
+      Navigator.of(context).push(
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const SettingsScreen(),
+          transitionsBuilder:
+              (context, animation, secondaryAnimation, child) {
+            const begin = Offset(1.0, 0.0);
+            const end = Offset.zero;
+            const curve = Curves.easeInOut;
+
+            final tween = Tween(begin: begin, end: end)
+                .chain(CurveTween(curve: curve));
+
+            return SlideTransition(
+              position: animation.drive(tween),
+              child: child,
+            );
+          },
+        ),
+      );
     } catch (e, stack) {
       print('[HomeController] Erreur lors de navigateToSettings: $e');
       print(stack);

@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 ///
 /// Permet d'afficher un titre, un sous-titre optionnel, une icône
 /// et un widget de fin (switch, slider, bouton, etc.).
+///
+/// Implémentée sans utiliser [ListTile] afin d'éviter certains
+/// problèmes de layout dans des conteneurs scrollables imbriqués.
 class SettingTile extends StatelessWidget {
   /// Titre principal du paramètre.
   final String title;
@@ -31,30 +34,60 @@ class SettingTile extends StatelessWidget {
 
     return Column(
       children: [
-        ListTile(
-          leading: icon != null
-              ? Icon(icon, color: theme.colorScheme.secondary)
-              : null,
-          title: Text(
-            title,
-            style: theme.textTheme.titleLarge,
+        Container(
+          margin: const EdgeInsets.symmetric(vertical: 8.0),
+          padding: const EdgeInsets.all(12.0),
+          decoration: BoxDecoration(
+            color: theme.cardColor,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.03),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-          subtitle: subtitle != null
-              ? Text(
-                  subtitle!,
-                  style: theme.textTheme.bodyMedium,
-                )
-              : null,
-          trailing: trailing,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (icon != null) ...[
+                Icon(icon, color: theme.colorScheme.secondary),
+                const SizedBox(width: 16),
+              ],
+
+              // Texte (titre + sous-titre) prend tout l'espace restant.
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: theme.textTheme.titleLarge,
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle!,
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
+              const SizedBox(width: 16),
+
+              // Widget de fin (switch / slider / bouton...).
+              trailing,
+            ],
+          ),
         ),
+
         // Séparateur discret sous chaque tuile.
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Divider(
-            height: 1,
-            color: theme.dividerColor.withOpacity(0.5),
-          ),
+        const Divider(
+          height: 1,
+          color: Color(0xFFE0E0E0),
         ),
       ],
     );

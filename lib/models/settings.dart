@@ -15,12 +15,16 @@ class Settings {
   /// Volume global de l'application (entre 0.0 et 1.0, 0.5 par défaut).
   final double volume;
 
+  /// Indique si les retours haptiques (vibrations) sont activés (true par défaut).
+  final bool hapticsEnabled;
+
   /// Constructeur avec valeurs par défaut adaptées à une première utilisation.
   const Settings({
     this.maxScore = 21,
     this.soundEnabled = true,
     this.darkMode = false,
     this.volume = 0.5,
+    this.hapticsEnabled = true,
   });
 
   /// Crée une nouvelle instance de [Settings] en copiant l'objet courant
@@ -32,12 +36,14 @@ class Settings {
     bool? soundEnabled,
     bool? darkMode,
     double? volume,
+    bool? hapticsEnabled,
   }) {
     return Settings(
       maxScore: maxScore ?? this.maxScore,
       soundEnabled: soundEnabled ?? this.soundEnabled,
       darkMode: darkMode ?? this.darkMode,
       volume: volume ?? this.volume,
+      hapticsEnabled: hapticsEnabled ?? this.hapticsEnabled,
     );
   }
 
@@ -51,6 +57,7 @@ class Settings {
       'soundEnabled': soundEnabled,
       'darkMode': darkMode,
       'volume': volume,
+      'hapticsEnabled': hapticsEnabled,
     };
   }
 
@@ -64,6 +71,7 @@ class Settings {
       soundEnabled: json['soundEnabled'] as bool? ?? true,
       darkMode: json['darkMode'] as bool? ?? false,
       volume: (json['volume'] as num?)?.toDouble() ?? 0.5,
+      hapticsEnabled: json['hapticsEnabled'] as bool? ?? true,
     );
   }
 }

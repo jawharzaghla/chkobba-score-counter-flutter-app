@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../../models/settings.dart';
 import '../../../services/audio_service.dart';
+import '../../../services/haptic_service.dart';
 import '../../../services/storage_service.dart';
 
 /// Contrôleur des paramètres de l'application.
@@ -41,6 +42,20 @@ class SettingsController extends ChangeNotifier {
     }
   }
 
+  /// Active ou désactive les retours haptiques (vibrations).
+  Future<void> toggleHaptics(bool value) async {
+    try {
+      print('[SettingsController] toggleHaptics -> $value');
+      _settings = _settings.copyWith(hapticsEnabled: value);
+      await _storage.saveSettings(_settings);
+      await _applyToServices();
+      notifyListeners();
+    } catch (e, stack) {
+      print('[SettingsController] Erreur lors de toggleHaptics: $e');
+      print(stack);
+    }
+  }
+
   /// Applique les paramètres courants aux services globaux.
   ///
   /// Actuellement, cela synchronise :
@@ -50,6 +65,7 @@ class SettingsController extends ChangeNotifier {
     try {
       await AudioService().setVolume(_settings.volume);
       AudioService().setSoundEnabled(_settings.soundEnabled);
+      HapticService().setEnabled(_settings.hapticsEnabled);
     } catch (e, stack) {
       print('[SettingsController] Erreur lors de _applyToServices: $e');
       print(stack);
@@ -73,7 +89,8 @@ class SettingsController extends ChangeNotifier {
           'maxScore=${_settings.maxScore}, '
           'soundEnabled=${_settings.soundEnabled}, '
           'darkMode=${_settings.darkMode}, '
-          'volume=${_settings.volume}');
+          'volume=${_settings.volume}, '
+          'hapticsEnabled=${_settings.hapticsEnabled}');
     } catch (e, stack) {
       print('[SettingsController] Erreur lors de loadSettings: $e');
       print(stack);

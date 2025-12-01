@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'constants.dart';
+
 /// Classe centralisant les thèmes clair et sombre de l'application.
 ///
 /// Les couleurs sont inspirées d'un univers de jeu de cartes traditionnel
@@ -27,20 +29,20 @@ class AppTheme {
 
   /// Construit le [ThemeData] pour le mode clair.
   static ThemeData _buildLightTheme() {
-    const primary = Color(0xFF8B0000); // Rouge bordeaux profond.
-    const secondary = Color(0xFFDAA520); // Or chaud pour les accents.
-    const background = Color(0xFFF5E6D3); // Beige clair rappelant une table de jeu.
-    const surface = Colors.white; // Surfaces de cartes et panneaux.
+    const primary = AppColors.orange;
+    const secondary = AppColors.darkBlue;
+    const background = AppColors.white;
+    const surface = AppColors.white;
 
     final colorScheme = const ColorScheme.light().copyWith(
       primary: primary,
       secondary: secondary,
       background: background,
       surface: surface,
-      onPrimary: Colors.white,
-      onSecondary: Colors.black,
-      onBackground: Colors.black,
-      onSurface: Colors.black,
+      onPrimary: AppColors.white,
+      onSecondary: AppColors.white,
+      onBackground: secondary,
+      onSurface: secondary,
     );
 
     final baseTextTheme = ThemeData.light().textTheme;
@@ -50,31 +52,31 @@ class AppTheme {
       displayLarge: const TextStyle(
         fontSize: 72,
         fontWeight: FontWeight.bold,
-        color: primary,
+        color: AppColors.orange,
       ),
       // Noms des joueurs.
       displayMedium: const TextStyle(
         fontSize: 24,
         fontWeight: FontWeight.bold,
-        color: Colors.black,
+        color: AppColors.darkBlue,
       ),
       // Titres de sections/écrans.
       titleLarge: const TextStyle(
         fontSize: 20,
         fontWeight: FontWeight.w600,
-        color: Colors.black,
+        color: AppColors.darkBlue,
       ),
       // Texte normal.
       bodyLarge: const TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.normal,
-        color: Colors.black87,
+        color: AppColors.darkBlue,
       ),
       // Labels de boutons principaux.
       labelLarge: const TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.bold,
-        color: Colors.white,
+        color: AppColors.white,
       ),
     );
 
@@ -84,17 +86,25 @@ class AppTheme {
       scaffoldBackgroundColor: background,
       textTheme: textTheme,
 
+      // AppBar avec fond orange et texte blanc.
+      appBarTheme: const AppBarTheme(
+        backgroundColor: AppColors.orange,
+        foregroundColor: AppColors.white,
+        elevation: 0,
+        centerTitle: true,
+      ),
+
       // Style des boutons principaux (ElevatedButton).
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primary,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.white,
           textStyle: textTheme.labelLarge,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(8),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          elevation: 4,
+          elevation: 0,
         ),
       ),
 
@@ -103,18 +113,18 @@ class AppTheme {
         filled: true,
         fillColor: surface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: primary.withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: secondary.withOpacity(0.15)),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: primary.withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: secondary.withOpacity(0.2)),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: primary, width: 2),
         ),
-        labelStyle: TextStyle(color: primary.withOpacity(0.8)),
+        labelStyle: TextStyle(color: secondary.withOpacity(0.8)),
       ),
 
       // Style des cartes représentant les joueurs ou sections.
@@ -123,9 +133,9 @@ class AppTheme {
       // versions récentes de Flutter / Material.
       cardTheme: CardThemeData(
         color: surface,
-        elevation: 4,
+        elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
         ),
         margin: const EdgeInsets.all(8),
       ),
@@ -134,20 +144,21 @@ class AppTheme {
 
   /// Construit le [ThemeData] pour le mode sombre.
   static ThemeData _buildDarkTheme() {
-    const primary = Color(0xFFCD5C5C); // Rouge adouci pour le mode sombre.
-    const secondary = Color(0xFFFFD700); // Or vif pour faire ressortir les actions.
-    const background = Color(0xFF1A1A1A); // Fond très sombre, neutre.
-    const surface = Color(0xFF2D2D2D); // Surfaces légèrement plus claires.
+    // Version assombrie du thème clair : orange plus doux et bleu nuit.
+    const primary = Color(0xFFFFA94D); // Orange plus clair pour le sombre.
+    const secondary = Color(0xFF0A1A2A); // Bleu nuit très sombre.
+    const background = Color(0xFF050B10); // Fond quasi noir bleuté.
+    const surface = Color(0xFF111827); // Surfaces légèrement plus claires.
 
     final colorScheme = const ColorScheme.dark().copyWith(
       primary: primary,
-      secondary: secondary,
+      secondary: primary,
       background: background,
       surface: surface,
-      onPrimary: Colors.black,
-      onSecondary: Colors.black,
-      onBackground: Colors.white,
-      onSurface: Colors.white,
+      onPrimary: AppColors.white,
+      onSecondary: AppColors.white,
+      onBackground: AppColors.white,
+      onSurface: AppColors.white,
     );
 
     final baseTextTheme = ThemeData.dark().textTheme;
@@ -156,17 +167,17 @@ class AppTheme {
       displayLarge: const TextStyle(
         fontSize: 72,
         fontWeight: FontWeight.bold,
-        color: Colors.white,
+        color: AppColors.white,
       ),
       displayMedium: const TextStyle(
         fontSize: 24,
         fontWeight: FontWeight.bold,
-        color: Colors.white,
+        color: AppColors.white,
       ),
       titleLarge: const TextStyle(
         fontSize: 20,
         fontWeight: FontWeight.w600,
-        color: Colors.white,
+        color: AppColors.white,
       ),
       bodyLarge: const TextStyle(
         fontSize: 16,
@@ -176,7 +187,7 @@ class AppTheme {
       labelLarge: const TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.bold,
-        color: Colors.black,
+        color: AppColors.white,
       ),
     );
 
@@ -186,16 +197,23 @@ class AppTheme {
       scaffoldBackgroundColor: background,
       textTheme: textTheme,
 
+      appBarTheme: const AppBarTheme(
+        backgroundColor: primary,
+        foregroundColor: AppColors.white,
+        elevation: 0,
+        centerTitle: true,
+      ),
+
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: secondary,
-          foregroundColor: Colors.black,
+          backgroundColor: primary,
+          foregroundColor: AppColors.white,
           textStyle: textTheme.labelLarge,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(8),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          elevation: 2,
+          elevation: 0,
         ),
       ),
 
@@ -203,15 +221,15 @@ class AppTheme {
         filled: true,
         fillColor: surface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: primary.withOpacity(0.5)),
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.white24),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: primary.withOpacity(0.5)),
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.white24),
         ),
         focusedBorder: const OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderRadius: BorderRadius.all(Radius.circular(8)),
           borderSide: BorderSide(color: Colors.white, width: 2),
         ),
         labelStyle: TextStyle(color: Colors.white70),
@@ -219,9 +237,9 @@ class AppTheme {
 
       cardTheme: CardThemeData(
         color: surface,
-        elevation: 3,
+        elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
         ),
         margin: const EdgeInsets.all(8),
       ),
