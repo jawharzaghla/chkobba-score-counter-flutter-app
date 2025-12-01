@@ -141,6 +141,12 @@ class AudioService {
 
       _players[id] = player;
 
+      // Si le son est déjà en cours, on revient simplement au début pour
+      // donner un effet de "clic" réactif lors de taps rapides.
+      if (player.state == PlayerState.playing) {
+        await player.seek(Duration.zero);
+      }
+
       await player.resume();
       print('[AudioService] Lecture du son "$id"');
     } catch (e, stack) {

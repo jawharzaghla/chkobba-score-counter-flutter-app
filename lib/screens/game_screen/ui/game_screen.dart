@@ -73,6 +73,7 @@ class GameScreen extends StatelessWidget {
                           behavior: HitTestBehavior.opaque,
                           onTap: controller.incrementPlayer1Score,
                           child: Container(
+                            width: double.infinity,
                             decoration: const BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
@@ -154,6 +155,7 @@ class GameScreen extends StatelessWidget {
                         behavior: HitTestBehavior.opaque,
                         onTap: controller.incrementPlayer2Score,
                         child: Container(
+                          width: double.infinity,
                           decoration: const BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
@@ -234,22 +236,27 @@ class GameScreen extends StatelessWidget {
                   child: GestureDetector(
                     onTap: () => _showResetDialog(context),
                     child: Container(
-                      width: 56,
-                      height: 56,
+                      width: 72,
+                      height: 72,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.orange,
                         shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white,
+                          width: 3,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.15),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
                           ),
                         ],
                       ),
                       child: const Icon(
                         Icons.refresh,
-                        color: AppColors.darkBlue,
+                        color: Colors.white,
+                        size: 32,
                       ),
                     ),
                   ),

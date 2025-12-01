@@ -47,10 +47,17 @@ class GameController extends ChangeNotifier {
       print('[GameController] Chargement de la partie...');
       await _storage.init();
       await _audio.init();
+      // On lit également les paramètres pour récupérer le score max choisi
+      // par l'utilisateur dans l'écran des paramètres.
+      final settings = await _storage.loadSettings();
 
       final loaded = await _storage.loadGameState();
-      _gameState = loaded ?? const GameState();
-      _scoreController = ScoreController(maxScore: _gameState.maxScore);
+      final baseState = loaded ?? const GameState();
+
+      // On force le maxScore de la partie à refléter la valeur des Settings
+      // afin que le slider de "Score Maximum" ait un impact réel sur le jeu.
+      _gameState = baseState.copyWith(maxScore: settings.maxScore);
+      _scoreController = ScoreController(maxScore: settings.maxScore);
 
       _showWinner = _gameState.winner != null;
 
@@ -116,8 +123,8 @@ class GameController extends ChangeNotifier {
   Future<void> incrementPlayer1Score() async {
     try {
       _pushHistory();
-      await _audio.playTap();
-      await _haptic.lightImpact();
+      _audio.playTap();
+      _haptic.lightImpact();
 
       final updatedPlayer = _scoreController.incrementScore(_gameState.player1);
       _gameState = _gameState.copyWith(player1: updatedPlayer);
@@ -135,8 +142,8 @@ class GameController extends ChangeNotifier {
   Future<void> incrementPlayer2Score() async {
     try {
       _pushHistory();
-      await _audio.playTap();
-      await _haptic.lightImpact();
+      _audio.playTap();
+      _haptic.lightImpact();
 
       final updatedPlayer = _scoreController.incrementScore(_gameState.player2);
       _gameState = _gameState.copyWith(player2: updatedPlayer);
@@ -154,8 +161,8 @@ class GameController extends ChangeNotifier {
   Future<void> decrementPlayer1Score() async {
     try {
       _pushHistory();
-      await _audio.playTap();
-      await _haptic.selectionClick();
+      _audio.playTap();
+      _haptic.selectionClick();
 
       final updatedPlayer = _scoreController.decrementScore(_gameState.player1);
       _gameState = _gameState.copyWith(player1: updatedPlayer);
@@ -172,8 +179,8 @@ class GameController extends ChangeNotifier {
   Future<void> decrementPlayer2Score() async {
     try {
       _pushHistory();
-      await _audio.playTap();
-      await _haptic.selectionClick();
+      _audio.playTap();
+      _haptic.selectionClick();
 
       final updatedPlayer = _scoreController.decrementScore(_gameState.player2);
       _gameState = _gameState.copyWith(player2: updatedPlayer);
@@ -193,8 +200,8 @@ class GameController extends ChangeNotifier {
       final updatedPlayer = _scoreController.setScore(_gameState.player1, newScore);
       _gameState = _gameState.copyWith(player1: updatedPlayer);
 
-      await _audio.playTap();
-      await _haptic.selectionClick();
+      _audio.playTap();
+      _haptic.selectionClick();
 
       await _autoSave();
       await _checkVictory();
@@ -212,8 +219,8 @@ class GameController extends ChangeNotifier {
       final updatedPlayer = _scoreController.setScore(_gameState.player2, newScore);
       _gameState = _gameState.copyWith(player2: updatedPlayer);
 
-      await _audio.playTap();
-      await _haptic.selectionClick();
+      _audio.playTap();
+      _haptic.selectionClick();
 
       await _autoSave();
       await _checkVictory();
@@ -257,8 +264,8 @@ class GameController extends ChangeNotifier {
       // cohérentes si nécessaire.
       _scoreController.undo();
 
-      await _audio.playTap();
-      await _haptic.selectionClick();
+      _audio.playTap();
+      _haptic.selectionClick();
 
       await _autoSave();
       notifyListeners();
@@ -306,8 +313,8 @@ class GameController extends ChangeNotifier {
         _gameState = _gameState.copyWith(player2: updatedPlayer);
       }
 
-      await _audio.playTap();
-      await _haptic.selectionClick();
+      _audio.playTap();
+      _haptic.selectionClick();
 
       await _autoSave();
       notifyListeners();
@@ -320,10 +327,9 @@ class GameController extends ChangeNotifier {
   /// Masque l'overlay de victoire et efface le nom du gagnant.
   Future<void> dismissWinner() async {
     try {
-      _showWinner = false;
-      _gameState = _gameState.copyWith(winner: null);
-      await _autoSave();
-      notifyListeners();
+      // Après un écran de victoire, on enchaîne automatiquement sur
+      // une nouvelle manche en réinitialisant complètement la partie.
+      await reset();
     } catch (e, stack) {
       print('[GameController] Erreur lors de dismissWinner: $e');
       print(stack);

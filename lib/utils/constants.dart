@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 /// Fichier contenant toutes les constantes globales de l'application.
 ///
 /// Les constantes sont organisées par thématique dans des classes
