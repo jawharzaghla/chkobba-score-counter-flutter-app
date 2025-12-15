@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../models/game_state.dart';
+import '../../../services/storage_service.dart';
 import '../../../utils/constants.dart';
 import '../controller/home_controller.dart';
 
@@ -19,6 +21,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _scaleController;
+  final _player1Controller = TextEditingController();
+  final _player2Controller = TextEditingController();
+  final _storage = StorageService();
 
   @override
   void initState() {
@@ -30,11 +35,25 @@ class _HomeScreenState extends State<HomeScreen>
       lowerBound: 0.98,
       upperBound: 1.02,
     )..repeat(reverse: true);
+
+    _loadInitialNames();
+  }
+
+  Future<void> _loadInitialNames() async {
+    // Charge les noms sauvegardés depuis le GameState, ou utilise les valeurs par défaut.
+    final savedState = await _storage.loadGameState();
+    final state = savedState ?? const GameState();
+    setState(() {
+      _player1Controller.text = state.player1.name;
+      _player2Controller.text = state.player2.name;
+    });
   }
 
   @override
   void dispose() {
     _scaleController.dispose();
+    _player1Controller.dispose();
+    _player2Controller.dispose();
     super.dispose();
   }
 
@@ -87,6 +106,75 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
 
+              // Zone d'édition des noms des joueurs.
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextField(
+                      controller: _player1Controller,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Nom du Joueur 1',
+                        hintText: 'Joueur 1',
+                        labelStyle: const TextStyle(color: Colors.white70),
+                        hintStyle: const TextStyle(color: Colors.white38),
+                        prefixIcon: const Icon(
+                          Icons.person,
+                          color: Colors.white70,
+                        ),
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.06),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.white30),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.white),
+                        ),
+                      ),
+                      cursorColor: Colors.white,
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _player2Controller,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Nom du Joueur 2',
+                        hintText: 'Joueur 2',
+                        labelStyle: const TextStyle(color: Colors.white70),
+                        hintStyle: const TextStyle(color: Colors.white38),
+                        prefixIcon: const Icon(
+                          Icons.person_outline,
+                          color: Colors.white70,
+                        ),
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.06),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.white30),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.white),
+                        ),
+                      ),
+                      cursorColor: Colors.white,
+                    ),
+                  ],
+                ),
+              ),
+
               // Contenu principal avec bouton "play" circulaire.
               Expanded(
                 child: Center(
@@ -94,7 +182,21 @@ class _HomeScreenState extends State<HomeScreen>
                     scale: _scaleController,
                     child: InkWell(
                       borderRadius: BorderRadius.circular(100),
-                      onTap: () => HomeController.navigateToGame(context),
+                      onTap: () async {
+                        // Sauvegarde les noms saisis dans le GameState avant de lancer la partie.
+                        final currentState = await _storage.loadGameState() ?? const GameState();
+                        final updatedState = currentState.copyWith(
+                          player1: currentState.player1.copyWith(name: _player1Controller.text.trim().isEmpty
+                              ? currentState.player1.name
+                              : _player1Controller.text.trim()),
+                          player2: currentState.player2.copyWith(name: _player2Controller.text.trim().isEmpty
+                              ? currentState.player2.name
+                              : _player2Controller.text.trim()),
+                        );
+                        await _storage.saveGameState(updatedState);
+                        if (!mounted) return;
+                        await HomeController.navigateToGame(context);
+                      },
                       child: Container(
                         width: 200,
                         height: 200,

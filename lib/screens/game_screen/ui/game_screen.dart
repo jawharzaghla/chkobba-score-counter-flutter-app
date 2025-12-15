@@ -16,6 +16,51 @@ import 'winner_overlay.dart';
 class GameScreen extends StatelessWidget {
   const GameScreen({super.key});
 
+  Future<void> _showEditNameDialog(
+    BuildContext context, {
+    required bool isPlayer1,
+    required String currentName,
+  }) async {
+    final controller = context.read<GameController>();
+    final textController = TextEditingController(text: currentName);
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Modifier le nom du joueur'),
+          content: TextField(
+            controller: textController,
+            decoration: const InputDecoration(
+              labelText: 'Nom du joueur',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Annuler'),
+            ),
+            TextButton(
+              onPressed: () {
+                final newName = textController.text.trim();
+                if (newName.isNotEmpty) {
+                  Navigator.of(context).pop(newName);
+                } else {
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text('Valider'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result != null && result.isNotEmpty) {
+      await controller.editPlayerName(isPlayer1, result);
+    }
+  }
+
   Future<void> _showResetDialog(BuildContext context) async {
     final controller = context.read<GameController>();
     final confirmed = await showDialog<bool>(
@@ -52,6 +97,35 @@ class GameScreen extends StatelessWidget {
     }
   }
 
+  void _showPlusOneAnimation(BuildContext context, {required bool isPlayer1}) {
+    final overlay = Overlay.of(context);
+    if (overlay == null) return;
+
+    final entry = OverlayEntry(
+      builder: (context) {
+        final size = MediaQuery.of(context).size;
+        return IgnorePointer(
+          child: Stack(
+            children: [
+              Positioned(
+                top: isPlayer1 ? size.height * 0.20 : null,
+                bottom: isPlayer1 ? null : size.height * 0.20,
+                left: 0,
+                right: 0,
+                child: const _PlusOneBubble(),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    overlay.insert(entry);
+    Future.delayed(const Duration(milliseconds: 600), () {
+      entry.remove();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<GameController>(
@@ -71,7 +145,10 @@ class GameScreen extends StatelessWidget {
                         angle: math.pi,
                         child: GestureDetector(
                           behavior: HitTestBehavior.opaque,
-                          onTap: controller.incrementPlayer1Score,
+                          onTap: () {
+                            _showPlusOneAnimation(context, isPlayer1: true);
+                            controller.incrementPlayer1Score();
+                          },
                           child: Container(
                             width: double.infinity,
                             decoration: const BoxDecoration(
@@ -132,13 +209,20 @@ class GameScreen extends StatelessWidget {
                                     ),
                                   ),
 
-                                  // Nom du joueur.
-                                  Text(
-                                    state.player1.name,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
+                                  // Nom du joueur (cliquable pour édition).
+                                  GestureDetector(
+                                    onTap: () => _showEditNameDialog(
+                                      context,
+                                      isPlayer1: true,
+                                      currentName: state.player1.name,
+                                    ),
+                                    child: Text(
+                                      state.player1.name,
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -153,7 +237,10 @@ class GameScreen extends StatelessWidget {
                     Expanded(
                       child: GestureDetector(
                         behavior: HitTestBehavior.opaque,
-                        onTap: controller.incrementPlayer2Score,
+                        onTap: () {
+                          _showPlusOneAnimation(context, isPlayer1: false);
+                          controller.incrementPlayer2Score();
+                        },
                         child: Container(
                           width: double.infinity,
                           decoration: const BoxDecoration(
@@ -170,13 +257,20 @@ class GameScreen extends StatelessWidget {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
-                                // Nom du joueur 2.
-                                Text(
-                                  state.player2.name,
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
+                                // Nom du joueur 2 (cliquable pour édition).
+                                GestureDetector(
+                                  onTap: () => _showEditNameDialog(
+                                    context,
+                                    isPlayer1: false,
+                                    currentName: state.player2.name,
+                                  ),
+                                  child: Text(
+                                    state.player2.name,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                 ),
 
@@ -269,10 +363,95 @@ class GameScreen extends StatelessWidget {
                     winnerName: state.winner!,
                     onDismiss: controller.dismissWinner,
                   ),
+
+                // Back button to return to the previous (home) screen.
+                Positioned(
+                  top: 16,
+                  left: 16,
+                  child: SafeArea(
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: Colors.white,
+                      ),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ),
+                ),
               ],
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _PlusOneBubble extends StatefulWidget {
+  const _PlusOneBubble();
+
+  @override
+  State<_PlusOneBubble> createState() => _PlusOneBubbleState();
+}
+
+class _PlusOneBubbleState extends State<_PlusOneBubble>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _opacity;
+  late final Animation<Offset> _offset;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    )..forward();
+
+    _opacity = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOut,
+    );
+
+    _offset = Tween<Offset>(
+      begin: const Offset(0, 0.2),
+      end: const Offset(0, -0.2),
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOut,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _opacity,
+      child: SlideTransition(
+        position: _offset,
+        child: const Text(
+          '+1',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            shadows: [
+              Shadow(
+                color: Colors.black54,
+                blurRadius: 8,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
